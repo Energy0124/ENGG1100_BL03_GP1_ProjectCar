@@ -61,6 +61,9 @@ int btStatus = 0;     // Parameter name (0), Parameter value (1)
 int btState = 0;      // Detemine the current state.  (Receive X (0), receive Y (1)
 String btSendStr = "";
 
+//For debug testing
+int ledFrame=0;
+
 void setup() {
   //Motor Control
   pinMode(M1DIR, OUTPUT);
@@ -109,11 +112,52 @@ void setup() {
   dc.SetMeasurementMode(Measurement_Continuous); // Set the measurement mode to Continuous
 }
 
+void debugTest(){
+  //play with led
+  if(ledFrame%8==0){
+    setLED(0b11000000);
+  }
+  if(ledFrame%8==1){
+    setLED(0b00110000);
+  }
+  if(ledFrame%8==2){
+    setLED(0b00001100);
+  }
+  if(ledFrame%8==3){
+    setLED(0b00000011);
+  }
+  if(ledFrame%8==4){
+    setLED(0b10101010);
+  }
+  if(ledFrame%8==5){
+    setLED(0b01010101);
+  }
+  if(ledFrame%8==6){
+    setLED(0b10101010);
+  }
+  if(ledFrame%8==7){
+    setLED(0b01010101);
+  }
+
+  delay(399);
+
+
+  if(ledFrame<7){
+    ledFrame++;
+  }else{
+    ledFrame=0;
+  }
+}
+
+
 // this is arduino program loop.
 // for details, please take a look of lecture notes.
 // student DO NOT modify the code.
 void loop()
 {
+
+
+
   BluetoothCom();
   if (sDeviceFlag) {
       SetDevice();
@@ -122,10 +166,12 @@ void loop()
   if ( pLastTick < (millis()-sTickTimeout) || pLastTick == 0) {
       // Bluetooth receive TIMEOUT
       M1.set(0); M2.set(0); M3.set(0);
+      //For debug
+      debugTest();
   }else{
     //Decide to do StateMachine Function or LightSensing Function
     if (sStateTick) {
-      setLED(0b00110000);
+      setLED(0b11111111);
       StateMachine(joystrickX, joystrickY);
       sStateTick = false;
     }else if (sLightTick) {
