@@ -397,11 +397,13 @@ void StateMachine(int X, int Y)
       break;
     case 7:
       // TODO: please fill some codes here.
+      M1.set(255); M2.set(255); M3.set(255);
       if (RobotRot == 0)
         smState = 0;
       break;
     case 8:
       // TODO: please fill some codes here.
+      M1.set(-255); M2.set(-255); M3.set(-255);
       if (RobotRot == 0)
         smState = 0;
       break;
