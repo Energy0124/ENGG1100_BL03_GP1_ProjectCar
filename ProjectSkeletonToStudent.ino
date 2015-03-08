@@ -139,6 +139,7 @@ void debugTest(){
     setLED(0b01010101);
   }
 
+//TODO: avoid delay if possible
   delay(399);
 
 
@@ -197,7 +198,8 @@ void BluetoothCom() {
   while(Serial.available()) {
     btChar = (char)Serial.read();
     switch (btChar) {
-      case '=':
+      //parsing command
+      case '=':       //When a '=' is received, prepare to receive the value
       case ':':
         btStatus =1;
         break;
@@ -285,6 +287,7 @@ void SetDevice() {
     }
   }
   else if (btDev == "io2") {
+    //TODO: add some function, eg. speed mode(high, low)
   }
   else if (btDev == "io3") {
     if(btVal == "0" ) {
@@ -353,6 +356,7 @@ void StateMachine(int X, int Y)
 {
   X = X-128;  if(X==0)X=1;  // X cannot be 0.
   Y = Y-128;  if(Y==0)Y=1;
+  //TODO: handle case where multiple button are pressed together, may need to modify bluetooth protocol
   switch (smState) {
     case 0:
       M1.set(0); M2.set(0); M3.set(0);
