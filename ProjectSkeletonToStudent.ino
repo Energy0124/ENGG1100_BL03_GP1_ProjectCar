@@ -12,6 +12,9 @@
 
 //RobotCar Setting (which need not to be change frequently)
 int stepSPD = 250;  // The maximum PWM speed for motor.
+int M1SPD=250;
+int M2SPD=250;
+int M3SPD=220;
 int stepS = 250;    // The PWM  (+/-) speed step setting.
 unsigned long sTickTimeout = 3000; // Bluetooth connection timeout (3000)(ms);
 
@@ -48,7 +51,8 @@ Motor M3(M3DIR, M3PWM);
 HMC5883L dc;
 float initial_angle = 0.0; float angle=0.0;
 int lcState = 0;
-
+//Bluetooth id:
+//30:14:08:26:35:12
 //Bluetooth Communication
 String inputString = "";         // a string to hold incoming data
 String outputString = "";
@@ -99,9 +103,12 @@ void setup() {
   pLastTick = 0;
 
   //Set motor
-  M1.setProperties(stepSPD, (-1*stepSPD), stepS);
+  /*M1.setProperties(stepSPD, (-1*stepSPD), stepS);
   M2.setProperties(stepSPD, (-1*stepSPD), stepS);
-  M3.setProperties(stepSPD, (-1*stepSPD), stepS);
+  M3.setProperties(stepSPD, (-1*stepSPD), stepS);*/
+  M1.setProperties(M1SPD, (M1SPD*-1), stepS);
+  M2.setProperties(M2SPD, (M2SPD*-1), stepS);
+  M3.setProperties(M3SPD, (M3SPD*-1), stepS);
 
   //Set Digitial Compass
   digitalWrite(A4, HIGH);
@@ -168,7 +175,7 @@ void loop()
       // Bluetooth receive TIMEOUT
       M1.set(0); M2.set(0); M3.set(0);
       //For debug
-      debugTest();
+      //debugTest();
   }else{
     //Decide to do StateMachine Function or LightSensing Function
     if (sStateTick) {
@@ -281,9 +288,18 @@ void SetDevice() {
   else if (btDev == "io0") {
     if(btVal == "0" && stepSPD<241) {  // this is what need to do then io0 is pressed, the stepSPD is an extra requiremnt.
       stepSPD = stepSPD + 10;
+      M1SPD+=10;
+      M2SPD+=10;
+      M3SPD+=10;
+/*
       M1.setProperties(stepSPD, (stepSPD*-1), stepS);
       M2.setProperties(stepSPD, (stepSPD*-1), stepS);
       M3.setProperties(stepSPD, (stepSPD*-1), stepS);
+      */
+
+      M1.setProperties(M1SPD, (M1SPD*-1), stepS);
+      M2.setProperties(M2SPD, (M2SPD*-1), stepS);
+      M3.setProperties(M3SPD, (M3SPD*-1), stepS);
     }
   }
   else if (btDev == "io2") {
@@ -299,9 +315,15 @@ void SetDevice() {
   else if (btDev == "io4") {
     if(btVal == "0" && stepSPD>20) {
       stepSPD = stepSPD - 10;
-      M1.setProperties(stepSPD, (stepSPD*-1), stepS);
+      M1SPD-=10;
+      M2SPD-=10;
+      M3SPD-=10;
+    /*  M1.setProperties(stepSPD, (stepSPD*-1), stepS);
       M2.setProperties(stepSPD, (stepSPD*-1), stepS);
-      M3.setProperties(stepSPD, (stepSPD*-1), stepS);
+      M3.setProperties(stepSPD, (stepSPD*-1), stepS);*/
+      M1.setProperties(M1SPD, (M1SPD*-1), stepS);
+      M2.setProperties(M2SPD, (M2SPD*-1), stepS);
+      M3.setProperties(M3SPD, (M3SPD*-1), stepS);
     }
   }
   else if (btDev == "io5" && RobotRot !=2 ) {
@@ -446,13 +468,13 @@ void StateMachine(int X, int Y)
         smState = 0;
       break;
     case 7:
-      // TODO: please fill some codes here.
+      // Rotate clockwisely
       M1.set(255); M2.set(255); M3.set(255);
       if (RobotRot == 0)
         smState = 0;
       break;
     case 8:
-      // TODO: please fill some codes here.
+      // Rotate anti-clockwise
       M1.set(-255); M2.set(-255); M3.set(-255);
       if (RobotRot == 0)
         smState = 0;
