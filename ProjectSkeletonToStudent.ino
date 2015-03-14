@@ -10,6 +10,8 @@
 #define DATAIN    12  //MISO
 #define SPICLOCK  13  //SCK
 
+//bluetooth pin/passcode: 1937
+
 //RobotCar Setting (which need not to be change frequently)
 int stepSPD = 250;  // The maximum PWM speed for motor.
 int M1SPD=250;
@@ -163,7 +165,7 @@ void debugTest(){
 // student DO NOT modify the code.
 void loop()
 {
-
+  //Serial.println("Testing");
 
 
   BluetoothCom();
@@ -204,6 +206,8 @@ void loop()
 void BluetoothCom() {
   while(Serial.available()) {
     btChar = (char)Serial.read();
+    //Debug:
+    //Serial.print(btChar);
     switch (btChar) {
       //parsing command
       case '=':       //When a '=' is received, prepare to receive the value
@@ -230,6 +234,7 @@ void BluetoothCom() {
         }
      }
   }
+
 }
 
 void SetDevice() {
