@@ -181,7 +181,7 @@ void loop()
   }else{
     //Decide to do StateMachine Function or LightSensing Function
     if (sStateTick) {
-      setLED(0b11111111);
+      setLED(0b00110000);
       StateMachine(joystrickX, joystrickY);
       sStateTick = false;
     }else if (sLightTick) {
@@ -515,13 +515,19 @@ void LightControl() {
   if (maxV>300 && maxV<750){
     if (maxA==0) {  // the light sensor at A0 is maximum
       // TODO: please fill your code here.
+      moveForward(200,100);
+
     }else if (maxA==1) {  // the light sensor at A1 is maximum
       // TODO: please fill your code here.
+      rotateLeft(150, 100);
+
     }else if (maxA==2) {  // the light sensor at A2 is maximum
       // TODO: please fill your code here.
-    }else if (maxA==3) {
+      rotateRight(150, 100);
+
+  //  }else if (maxA==3) {
       // TODO: please fill your code here.
-    }else {
+  //  }else {
       // TODO: please fill your code here.
     }
   }else {
