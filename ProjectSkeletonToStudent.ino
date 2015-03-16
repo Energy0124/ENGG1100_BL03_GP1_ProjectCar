@@ -17,6 +17,7 @@ int stepSPD = 250;  // The maximum PWM speed for motor.
 int M1SPD=250;
 int M2SPD=250;
 int M3SPD=220;
+float M3SPDScale=0.8;
 int stepS = 250;    // The PWM  (+/-) speed step setting.
 unsigned long sTickTimeout = 3000; // Bluetooth connection timeout (3000)(ms);
 
@@ -169,6 +170,8 @@ void loop()
 
 
   BluetoothCom();
+
+
   if (sDeviceFlag) {
       SetDevice();
       sDeviceFlag = false;
@@ -178,6 +181,8 @@ void loop()
       M1.set(0); M2.set(0); M3.set(0);
       //For debug
       //debugTest();
+      printLightInfo();
+      delay(500);
   }else{
     //Decide to do StateMachine Function or LightSensing Function
     if (sStateTick) {
@@ -221,6 +226,7 @@ void BluetoothCom() {
         return;
         // reset Strings
         //btDev = "";
+
         //btVal = "";
         break;
       default:
@@ -309,6 +315,9 @@ void SetDevice() {
   }
   else if (btDev == "io2") {
     //TODO: add some function, eg. speed mode(high, low)
+
+
+    printLightInfo();
   }
   else if (btDev == "io3") {
     if(btVal == "0" ) {
@@ -512,18 +521,23 @@ void LightControl() {
     }
   }
 
-  if (maxV>300 && maxV<750){
+
+  if(maxV<75){
+    //rotate if no light
+    rotateRight(200, 100);
+  }else if (maxV<300){
     if (maxA==0) {  // the light sensor at A0 is maximum
       // TODO: please fill your code here.
-      moveForward(200,100);
+      moveForward(250,100);
 
     }else if (maxA==1) {  // the light sensor at A1 is maximum
       // TODO: please fill your code here.
-      rotateLeft(150, 100);
+      rotateRight(150, 100);
 
     }else if (maxA==2) {  // the light sensor at A2 is maximum
       // TODO: please fill your code here.
-      rotateRight(150, 100);
+
+      rotateLeft(150, 100);
 
   //  }else if (maxA==3) {
       // TODO: please fill your code here.
@@ -645,20 +659,20 @@ void stopMove(int t) {
   M1.update(); M2.update(); M3.update();
   delay(t);
 }
-void rotateLeft(int spd, int t) {
-  M1.set(spd); M2.set(spd); M3.set(spd);
+void rotateRight(int spd, int t) {
+  M1.set(spd); M2.set(spd); M3.set(spd*M3SPDScale);
   M1.update(); M2.update(); M3.update();
   delay(t);
   stopMove(50);
 }
-void rotateRight(int spd, int t) {
-  M1.set(-1*spd); M2.set(-1*spd); M3.set(-1*spd);
+void rotateLeft(int spd, int t) {
+  M1.set(-1*spd); M2.set(-1*spd); M3.set(-1*spd*M3SPDScale);
   M1.update(); M2.update(); M3.update();
   delay(t);
   stopMove(50);
 }
 void moveForward(int spd, int t) {
-  M1.set(-1*spd); M2.set(0); M3.set(spd);
+  M1.set(-1*spd); M2.set(0); M3.set(spd*M3SPDScale);
   M1.update(); M2.update(); M3.update();
   delay(t);
   stopMove(50);
@@ -693,4 +707,33 @@ void pointTo(float dir) {
 // Student should not modify this function
 void slowDown() {
   delay(20);
+}
+
+
+void printLightInfo(){
+  //// A[4] represent 4 sensors used.
+  int A[4] = {0, 0, 0, 0};
+  int maxA = 0, maxV = 0, Asum = 0;
+  // first update sensors value.
+  A[0] = analogRead(A0);
+  A[1] = analogRead(A1);
+  A[2] = analogRead(A2);
+  //A[3] = analogRead(A3);
+  // and find the highest value.
+  maxV = A[0]; Asum =0;
+  for (int i=0; i<4; i++) {
+    Asum += A[i];
+    if (A[i] > maxV)  {
+      maxV = A[i];
+      maxA = i;
+    }
+  }
+  Serial.println("//Light sensor debug value:");
+  Serial.print("A0: ");Serial.println(A[0]);
+  Serial.print("A1: ");Serial.println(A[1]);
+  Serial.print("A2: ");Serial.println(A[2]);
+  Serial.print("maxV: ");Serial.println(maxV);
+  Serial.print("maxA: ");Serial.println(maxA);
+
+
 }
