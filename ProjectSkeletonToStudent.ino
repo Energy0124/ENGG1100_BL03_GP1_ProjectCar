@@ -120,6 +120,10 @@ void setup() {
   dc = HMC5883L(); //new instance of HMC5883L library
   dc.SetScale(1.3); //Set the scale of the compass.
   dc.SetMeasurementMode(Measurement_Continuous); // Set the measurement mode to Continuous
+
+
+  //setup init heading
+  initial_angle = getHeading();
 }
 
 void debugTest(){
@@ -181,7 +185,7 @@ void loop()
       M1.set(0); M2.set(0); M3.set(0);
       //For debug
       //debugTest();
-      printLightInfo();
+      printDebugInfo();
       delay(500);
   }else{
     //Decide to do StateMachine Function or LightSensing Function
@@ -317,7 +321,7 @@ void SetDevice() {
     //TODO: add some function, eg. speed mode(high, low)
 
 
-    printLightInfo();
+    printDebugInfo();
   }
   else if (btDev == "io3") {
     if(btVal == "0" ) {
@@ -527,22 +531,11 @@ void LightControl() {
     rotateRight(200, 100);
   }else if (maxV<300){
     if (maxA==0) {  // the light sensor at A0 is maximum
-      // TODO: please fill your code here.
-      moveForward(250,100);
-
+      moveForward(200,100);
     }else if (maxA==1) {  // the light sensor at A1 is maximum
-      // TODO: please fill your code here.
       rotateRight(150, 100);
-
     }else if (maxA==2) {  // the light sensor at A2 is maximum
-      // TODO: please fill your code here.
-
       rotateLeft(150, 100);
-
-  //  }else if (maxA==3) {
-      // TODO: please fill your code here.
-  //  }else {
-      // TODO: please fill your code here.
     }
   }else {
     // stop
@@ -553,17 +546,19 @@ void LightControl() {
 // this is a light and compass control function.
 // student should fill in some codes.
 void LightandCompassControl() {
-  // A[4] represent 4 sensors used.
-  int A[4] = {0, 0, 0, 0};
+  //heading
+  float heading=getHeading();
+  // A[3] represent 3 sensors used.
+  int A[3] = {0, 0, 0};
   int maxA = 0, maxV = 0, Asum = 0;
   // first update sensors value.
   A[0] = analogRead(A0);
   A[1] = analogRead(A1);
   A[2] = analogRead(A2);
-  A[3] = analogRead(A3);
+//  A[3] = analogRead(A3);
   // and find the highest value.
   maxV = A[0]; Asum =0;
-  for (int i=0; i<4; i++) {
+  for (int i=0; i<3; i++) {
     Asum += A[i];
     if (A[i] > maxV)  {
       maxV = A[i];
@@ -582,33 +577,111 @@ void LightandCompassControl() {
       lcState = 1;
       break;
     case 1:
-      if (maxV>300 && maxV<750){
-        if (maxA==0) {  // the light sensor at A0 is maximum
-          // TODO: please fill your code here.
-        }else if (maxA==1) {  // the light sensor at A1 is maximum
-          // TODO: please fill your code here.
-        }else if (maxA==2) {  // the light sensor at A2 is maximum
-          // TODO: please fill your code here.
-        }else if (maxA==3) {
-          // TODO: please fill your code here.
-        }
-      }else {
-        // stop
-        stopMove(50);
+    if(maxV<75){
+      //rotate if no light
+      //rotateRight(200, 100);
+      if(getRelativeHeading()<45.0||getRelativeHeading()>315.0){
+        moveForward(200,100);
+      }else{
+        pointTo(angle);
       }
+
+    }else if (maxV<300){
+      if (maxA==0) {  // the light sensor at A0 is maximum
+        moveForward(200,100);
+      }else if (maxA==1) {  // the light sensor at A1 is maximum
+        rotateRight(150, 100);
+      }else if (maxA==2) {  // the light sensor at A2 is maximum
+        rotateLeft(150, 100);
+      }
+    }else {
+      // stop
+      stopMove(50);
+      blinkLED();
       lcState = 2;
-      break;
-    case 2:
-      // TODO: please fill your code here.
-      break;
-    case 3:
-      // TODO: please fill your code here.
+
+    }
 
       break;
-    case 4:
-      // TODO: please fill your code here.
+
+    case 2:
+
+    angle+=120.0;
+    if(angle>360){
+      angle-=360;
+    }
+    pointTo(angle);
+    for (int i=0; i<10; ++i) {
+      pointTo(angle);
+      moveForward(250, 100);
+    }
+    if(maxV<75){
+      //rotate if no light
+      //rotateRight(200, 100);
+      if(getRelativeHeading()<120.0+45.0||getRelativeHeading()>120.0-45.0){
+        moveForward(200,100);
+      }else{
+        pointTo(angle);
+      }
+
+    }else if (maxV<300){
+      if (maxA==0) {  // the light sensor at A0 is maximum
+        moveForward(200,100);
+      }else if (maxA==1) {  // the light sensor at A1 is maximum
+        rotateRight(150, 100);
+      }else if (maxA==2) {  // the light sensor at A2 is maximum
+        rotateLeft(150, 100);
+      }
+    }else {
+      // stop
+      stopMove(50);
+      blinkLED();
+      lcState = 3;
+
+    }
+
       break;
+    case 3:
+    angle+=120.0;
+    if(angle>360){
+      angle-=360;
+    }
+    pointTo(angle);
+    for (int i=0; i<10; ++i) {
+      pointTo(angle);
+      moveForward(250, 100);
+    }
+    if(maxV<75){
+      //rotate if no light
+      //rotateRight(200, 100);
+      if(getRelativeHeading()<240.0+45.0||getRelativeHeading()>240.0-45.0){
+        moveForward(200,100);
+      }else{
+        pointTo(angle);
+      }
+
+    }else if (maxV<300){
+      if (maxA==0) {  // the light sensor at A0 is maximum
+        moveForward(200,100);
+      }else if (maxA==1) {  // the light sensor at A1 is maximum
+        rotateRight(150, 100);
+      }else if (maxA==2) {  // the light sensor at A2 is maximum
+        rotateLeft(150, 100);
+      }
+    }else {
+      // stop
+      stopMove(50);
+      blinkLED();
+      lcState = -1;
+
+    }
+
+      break;
+
     default:
+
+    stopMove(50);
+    blinkLED();
       break;
   }
 }
@@ -626,6 +699,20 @@ void updateLED() {
       SPI.transfer(pLEDpattern);
       digitalWrite(SELECT,HIGH);
 }
+
+void blinkLED() {
+     int j;
+
+     for(j=0;j<3;j++) {
+       setLED(0b11111111);
+       updateLED();
+       delay(500);
+       setLED(0b00000000);
+       updateLED();
+       delay(500);
+    }
+}
+
 
 // this function is to update Motor
 // Student should not modify this function
@@ -709,8 +796,34 @@ void slowDown() {
   delay(20);
 }
 
+float getRelativeHeading(){
+  float heading=getHeading();
+  float relativeHeading=heading-initial_angle;
+  if(relativeHeading<0){
+    relativeHeading+=360;
+  }
+  return relativeHeading;
+}
 
-void printLightInfo(){
+float toAbsHeading(float angle){
+  float absAngle=angle+initial_angle;
+  if(absAngle>360){
+    absAngle-=360;
+  }
+  return absAngle;
+}
+
+float toRelativeHeading(float angle){
+  float relativeAngle=angle-initial_angle;
+  if(relativeAngle<0){
+    relativeAngle+=360;
+  }
+  return relativeAngle;
+}
+
+void printDebugInfo(){
+ float heading= getHeading();
+ float rHeading=getRelativeHeading();
   //// A[4] represent 4 sensors used.
   int A[4] = {0, 0, 0, 0};
   int maxA = 0, maxV = 0, Asum = 0;
@@ -734,6 +847,8 @@ void printLightInfo(){
   Serial.print("A2: ");Serial.println(A[2]);
   Serial.print("maxV: ");Serial.println(maxV);
   Serial.print("maxA: ");Serial.println(maxA);
+  Serial.print("Heading:");Serial.println(heading);
+  Serial.print("Relative Heading:");Serial.println(rHeading);
 
 
 }
