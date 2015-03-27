@@ -16,7 +16,20 @@
 int stepSPD = 250;  // The maximum PWM speed for motor.
 int M1SPD=250;
 int M2SPD=250;
-int M3SPD=220;
+int M3SPD=250;
+int turnSPD=250;
+int turnMode=5;
+int speedMode=5;
+int minLight=75;
+int maxLight=330;
+int t3TurnSPD=250;
+int t3TurnTime1=470;
+int t3TurnTime2=420;
+int t3ForwardSPD=250;
+int t3ForwardTime=1000;
+int t3ForwardTime2=1500;
+
+
 float M3SPDScale=0.8;
 int stepS = 250;    // The PWM  (+/-) speed step setting.
 unsigned long sTickTimeout = 3000; // Bluetooth connection timeout (3000)(ms);
@@ -289,9 +302,9 @@ void SetDevice() {
        // io7 | io6 | io5
      // Usage:
        //io0: Set motor speed (+)
-       //io2: not use
+       //io2: not use || change speed mode
        //io3: start light follow function (for Task 2)
-       //io4: Set motor speed (-)
+       //io4: Set motor speed (-) || change turn mode
        //io5: rotate robot clockwise
        //io6: rotate robot anti-clockwise
        //io7: stop robot
@@ -319,9 +332,22 @@ void SetDevice() {
   }
   else if (btDev == "io2") {
     //TODO: add some function, eg. speed mode(high, low)
+    if(speedMode>1){
+      speedMode-=1;
+    }else{
+      speedMode=5;
+    }
+    M1SPD=speedMode*50;
+    M2SPD=speedMode*50;
+    M3SPD=speedMode*50;
 
 
-    printDebugInfo();
+    M1.setProperties(M1SPD, (M1SPD*-1), stepS);
+    M2.setProperties(M2SPD, (M2SPD*-1), stepS);
+    M3.setProperties(M3SPD, (M3SPD*-1), stepS);
+
+
+    //printDebugInfo();
   }
   else if (btDev == "io3") {
     if(btVal == "0" ) {
@@ -331,18 +357,24 @@ void SetDevice() {
     }
   }
   else if (btDev == "io4") {
-    if(btVal == "0" && stepSPD>20) {
+    /*if(btVal == "0" && stepSPD>20) {
       stepSPD = stepSPD - 10;
       M1SPD-=10;
       M2SPD-=10;
-      M3SPD-=10;
+      M3SPD-=10;/*
     /*  M1.setProperties(stepSPD, (stepSPD*-1), stepS);
       M2.setProperties(stepSPD, (stepSPD*-1), stepS);
       M3.setProperties(stepSPD, (stepSPD*-1), stepS);*/
-      M1.setProperties(M1SPD, (M1SPD*-1), stepS);
-      M2.setProperties(M2SPD, (M2SPD*-1), stepS);
-      M3.setProperties(M3SPD, (M3SPD*-1), stepS);
-    }
+
+      if(turnMode>1){
+        turnMode-=1;
+      }else{
+        turnMode=5;
+      }
+      turnSPD=turnMode*50;
+
+
+
   }
   else if (btDev == "io5" && RobotRot !=2 ) {
     if (btVal == "1") {
@@ -487,13 +519,13 @@ void StateMachine(int X, int Y)
       break;
     case 7:
       // Rotate clockwisely
-      M1.set(255); M2.set(255); M3.set(255);
+      M1.set(turnSPD); M2.set(turnSPD); M3.set(turnSPD);
       if (RobotRot == 0)
         smState = 0;
       break;
     case 8:
       // Rotate anti-clockwise
-      M1.set(-255); M2.set(-255); M3.set(-255);
+      M1.set(-turnSPD); M2.set(-turnSPD); M3.set(-turnSPD);
       if (RobotRot == 0)
         smState = 0;
       break;
@@ -526,10 +558,10 @@ void LightControl() {
   }
 
 
-  if(maxV<75){
+  if(maxV<minLight){
     //rotate if no light
     rotateRight(200, 100);
-  }else if (maxV<300){
+  }else if (maxV<maxLight){
     if (maxA==0) {  // the light sensor at A0 is maximum
       moveForward(200,100);
     }else if (maxA==1) {  // the light sensor at A1 is maximum
@@ -566,27 +598,43 @@ void LightandCompassControl() {
     }
   }
 
+  printDebugInfo();
+
+
   float tang=0.0;
     switch (lcState) {
     case 0:
-      pointTo(angle);
+
+    Serial.print("lcState:");Serial.println(lcState);
+    Serial.print("angle:");Serial.println(angle);
+      /*pointTo(angle);
       for (int i=0; i<10; ++i) {
         pointTo(angle);
         moveForward(250, 100);
-      }
+      }*/
+
+      //TODO: Remove debug code
+      moveForward(t3ForwardSPD,t3ForwardTime);
+      //blinkLED();
       lcState = 1;
       break;
+
     case 1:
-    if(maxV<75){
+
+    Serial.print("lcState:");Serial.println(lcState);
+    Serial.print("angle:");Serial.println(angle);
+    if(maxV<minLight){
       //rotate if no light
       //rotateRight(200, 100);
-      if(getRelativeHeading()<45.0||getRelativeHeading()>315.0){
+      moveForward(250,100);
+      /*if(getRelativeHeading()<45.0&&getRelativeHeading()>315.0){
         moveForward(200,100);
       }else{
         pointTo(angle);
-      }
+        moveForward(200,100);
+      }*/
 
-    }else if (maxV<300){
+    }else if (maxV<maxLight){
       if (maxA==0) {  // the light sensor at A0 is maximum
         moveForward(200,100);
       }else if (maxA==1) {  // the light sensor at A1 is maximum
@@ -606,25 +654,39 @@ void LightandCompassControl() {
 
     case 2:
 
-    angle+=120.0;
+    angle+=150.0;
     if(angle>360){
       angle-=360;
     }
-    pointTo(angle);
+
+    Serial.print("lcState:");Serial.println(lcState);
+    Serial.print("angle:");Serial.println(angle);
+
+  /*  pointTo(angle);
     for (int i=0; i<10; ++i) {
       pointTo(angle);
       moveForward(250, 100);
-    }
-    if(maxV<75){
+    }*/
+    //TODO: Remove debug code
+    rotateRight(t3TurnSPD, t3TurnTime1);
+    moveForward(t3ForwardSPD,t3ForwardTime2);
+    //blinkLED();
+    lcState = 3;
+    break;
+
+    case 3:
+    if(maxV<minLight){
       //rotate if no light
       //rotateRight(200, 100);
-      if(getRelativeHeading()<120.0+45.0||getRelativeHeading()>120.0-45.0){
+    /*  if(getRelativeHeading()<120.0+45.0&&getRelativeHeading()>120.0-45.0){
         moveForward(200,100);
       }else{
         pointTo(angle);
-      }
+        moveForward(200,100);
+      }*/
+      moveForward(250,100);
 
-    }else if (maxV<300){
+    }else if (maxV<maxLight){
       if (maxA==0) {  // the light sensor at A0 is maximum
         moveForward(200,100);
       }else if (maxA==1) {  // the light sensor at A1 is maximum
@@ -636,31 +698,45 @@ void LightandCompassControl() {
       // stop
       stopMove(50);
       blinkLED();
-      lcState = 3;
+      lcState = 4;
 
     }
 
       break;
-    case 3:
+    case 4:
     angle+=120.0;
     if(angle>360){
       angle-=360;
     }
+
+    Serial.print("lcState:");Serial.println(lcState);
+    Serial.print("angle:");Serial.println(angle);
+/*
     pointTo(angle);
     for (int i=0; i<10; ++i) {
       pointTo(angle);
       moveForward(250, 100);
-    }
-    if(maxV<75){
+    }*/
+    //TODO: Remove debug code
+    rotateRight(t3TurnSPD, t3TurnTime2);
+    moveForward(t3ForwardSPD,t3ForwardTime2);
+    //blinkLED();
+    lcState = 5;
+    break;
+
+    case 5:
+    if(maxV<minLight){
       //rotate if no light
       //rotateRight(200, 100);
-      if(getRelativeHeading()<240.0+45.0||getRelativeHeading()>240.0-45.0){
+    /*  if(getRelativeHeading()<240.0+45.0&&getRelativeHeading()>240.0-45.0){
         moveForward(200,100);
       }else{
         pointTo(angle);
-      }
+        moveForward(200,100);
+      }*/
+      moveForward(250,100);
 
-    }else if (maxV<300){
+    }else if (maxV<maxLight){
       if (maxA==0) {  // the light sensor at A0 is maximum
         moveForward(200,100);
       }else if (maxA==1) {  // the light sensor at A1 is maximum
@@ -682,6 +758,9 @@ void LightandCompassControl() {
 
     stopMove(50);
     blinkLED();
+    blinkLED();
+    blinkLED();
+    sCompassLightSen = false;
       break;
   }
 }
@@ -747,19 +826,19 @@ void stopMove(int t) {
   delay(t);
 }
 void rotateRight(int spd, int t) {
-  M1.set(spd); M2.set(spd); M3.set(spd*M3SPDScale);
+  M1.set(spd); M2.set(spd); M3.set(spd);
   M1.update(); M2.update(); M3.update();
   delay(t);
   stopMove(50);
 }
 void rotateLeft(int spd, int t) {
-  M1.set(-1*spd); M2.set(-1*spd); M3.set(-1*spd*M3SPDScale);
+  M1.set(-1*spd); M2.set(-1*spd); M3.set(-1*spd);
   M1.update(); M2.update(); M3.update();
   delay(t);
   stopMove(50);
 }
 void moveForward(int spd, int t) {
-  M1.set(-1*spd); M2.set(0); M3.set(spd*M3SPDScale);
+  M1.set(-1*spd); M2.set(0); M3.set(spd);
   M1.update(); M2.update(); M3.update();
   delay(t);
   stopMove(50);
