@@ -21,13 +21,18 @@ int turnSPD=250;
 int turnMode=5;
 int speedMode=5;
 int minLight=75;
-int maxLight=330;
+int maxLight=310;
+int minLightT2=75;
+int maxLightT2=300;
+int edgeLight=280;
 int t3TurnSPD=250;
 int t3TurnTime1=470;
 int t3TurnTime2=420;
 int t3ForwardSPD=250;
 int t3ForwardTime=1000;
 int t3ForwardTime2=1500;
+
+float relative_angle=0;
 
 
 float M3SPDScale=0.8;
@@ -406,6 +411,7 @@ void SetDevice() {
       sLightSen = false;
       smState = 0; lcState = 0;
       initial_angle = getHeading();
+      relative_angle=getRelativeHeading();
     }
   }
   else if (btDev == "io9") {
@@ -558,10 +564,10 @@ void LightControl() {
   }
 
 
-  if(maxV<minLight){
+  if(maxV<minLightT2){
     //rotate if no light
     rotateRight(200, 100);
-  }else if (maxV<maxLight){
+  }else if (maxV<maxLightT2){
     if (maxA==0) {  // the light sensor at A0 is maximum
       moveForward(200,100);
     }else if (maxA==1) {  // the light sensor at A1 is maximum
@@ -598,45 +604,58 @@ void LightandCompassControl() {
     }
   }
 
-  printDebugInfo();
+  //printDebugInfo();
 
 
   float tang=0.0;
     switch (lcState) {
     case 0:
 
-    Serial.print("lcState:");Serial.println(lcState);
-    Serial.print("angle:");Serial.println(angle);
-      /*pointTo(angle);
-      for (int i=0; i<10; ++i) {
-        pointTo(angle);
-        moveForward(250, 100);
-      }*/
+    //Serial.print("lcState:");Serial.println(lcState);
+    //Serial.print("angle:");Serial.println(angle);
+      //pointTo(angle);
+      relativePointTo(0.0);
+      for (int i=0; i<2; ++i) {
+        //pointTo(angle);
+
+        moveForward(250,500 );
+        relativePointTo(0.0);
+      }
+      //relativePointTo(0.0);
 
       //TODO: Remove debug code
-      moveForward(t3ForwardSPD,t3ForwardTime);
+    //  moveForward(t3ForwardSPD,t3ForwardTime);
       //blinkLED();
       lcState = 1;
       break;
 
     case 1:
 
-    Serial.print("lcState:");Serial.println(lcState);
-    Serial.print("angle:");Serial.println(angle);
+    //Serial.print("lcState:");Serial.println(lcState);
+    //Serial.print("angle:");Serial.println(angle);
     if(maxV<minLight){
       //rotate if no light
       //rotateRight(200, 100);
-      moveForward(250,100);
-      /*if(getRelativeHeading()<45.0&&getRelativeHeading()>315.0){
+      //moveForward(250,100);
+      if(getRelativeHeading()<30.0&&getRelativeHeading()>330.0){
         moveForward(200,100);
       }else{
-        pointTo(angle);
+        relativePointTo(0.0);
+        //pointTo(angle);
         moveForward(200,100);
-      }*/
+      }
 
-    }else if (maxV<maxLight){
+    }else if (maxV<maxLight&&maxV>edgeLight){
       if (maxA==0) {  // the light sensor at A0 is maximum
         moveForward(200,100);
+      }else if (maxA==1) {  // the light sensor at A1 is maximum
+        rotateRight(150, 100);
+      }else if (maxA==2) {  // the light sensor at A2 is maximum
+        rotateLeft(150, 100);
+      }
+    }else if (maxV<maxLight){
+      if (maxA==0) {  // the light sensor at A0 is maximum
+        moveForward(250,100);
       }else if (maxA==1) {  // the light sensor at A1 is maximum
         rotateRight(150, 100);
       }else if (maxA==2) {  // the light sensor at A2 is maximum
@@ -659,36 +678,49 @@ void LightandCompassControl() {
       angle-=360;
     }
 
-    Serial.print("lcState:");Serial.println(lcState);
-    Serial.print("angle:");Serial.println(angle);
+    //Serial.print("lcState:");Serial.println(lcState);
+    //Serial.print("angle:");Serial.println(angle);
 
-  /*  pointTo(angle);
+    //pointTo(angle);
+    relativePointTo(150.0);
     for (int i=0; i<10; ++i) {
-      pointTo(angle);
-      moveForward(250, 100);
-    }*/
+      //pointTo(angle);
+
+      moveForward(200, 100);
+      relativePointTo(150.0);
+    }
+    //relativePointTo(150.0);
     //TODO: Remove debug code
-    rotateRight(t3TurnSPD, t3TurnTime1);
+  /*  rotateRight(t3TurnSPD, t3TurnTime1);
     moveForward(t3ForwardSPD,t3ForwardTime2);
+    */
     //blinkLED();
     lcState = 3;
     break;
 
     case 3:
     if(maxV<minLight){
-      //rotate if no light
-      //rotateRight(200, 100);
-    /*  if(getRelativeHeading()<120.0+45.0&&getRelativeHeading()>120.0-45.0){
+
+      if(getRelativeHeading()<120.0+45.0&&getRelativeHeading()>120.0-45.0){
         moveForward(200,100);
       }else{
-        pointTo(angle);
+        //pointTo(angle);
+        relativePointTo(150.0);
         moveForward(200,100);
-      }*/
-      moveForward(250,100);
+      }
+      moveForward(200,100);
 
-    }else if (maxV<maxLight){
+    }else if (maxV<maxLight&&maxV>edgeLight){
       if (maxA==0) {  // the light sensor at A0 is maximum
         moveForward(200,100);
+      }else if (maxA==1) {  // the light sensor at A1 is maximum
+        rotateRight(150, 100);
+      }else if (maxA==2) {  // the light sensor at A2 is maximum
+        rotateLeft(150, 100);
+      }
+    }else if (maxV<maxLight){
+      if (maxA==0) {  // the light sensor at A0 is maximum
+        moveForward(250,100);
       }else if (maxA==1) {  // the light sensor at A1 is maximum
         rotateRight(150, 100);
       }else if (maxA==2) {  // the light sensor at A2 is maximum
@@ -709,17 +741,22 @@ void LightandCompassControl() {
       angle-=360;
     }
 
-    Serial.print("lcState:");Serial.println(lcState);
-    Serial.print("angle:");Serial.println(angle);
-/*
-    pointTo(angle);
+    //Serial.print("lcState:");Serial.println(lcState);
+    //Serial.print("angle:");Serial.println(angle);
+
+    //pointTo(angle);
+    relativePointTo(270.0);
     for (int i=0; i<10; ++i) {
-      pointTo(angle);
-      moveForward(250, 100);
-    }*/
+      //pointTo(angle);
+
+      moveForward(200, 100);
+      relativePointTo(270.0);
+    }
+    //relativePointTo(270.0);
     //TODO: Remove debug code
-    rotateRight(t3TurnSPD, t3TurnTime2);
+  /*  rotateRight(t3TurnSPD, t3TurnTime2);
     moveForward(t3ForwardSPD,t3ForwardTime2);
+    */
     //blinkLED();
     lcState = 5;
     break;
@@ -728,17 +765,26 @@ void LightandCompassControl() {
     if(maxV<minLight){
       //rotate if no light
       //rotateRight(200, 100);
-    /*  if(getRelativeHeading()<240.0+45.0&&getRelativeHeading()>240.0-45.0){
+      if(getRelativeHeading()<270.0+45.0&&getRelativeHeading()>270.0-45.0){
         moveForward(200,100);
       }else{
-        pointTo(angle);
+        //pointTo(angle);
+        relativePointTo(270.0);
         moveForward(200,100);
-      }*/
-      moveForward(250,100);
+      }
+      moveForward(200,100);
 
-    }else if (maxV<maxLight){
+    }else if (maxV<maxLight&&maxV>edgeLight){
       if (maxA==0) {  // the light sensor at A0 is maximum
         moveForward(200,100);
+      }else if (maxA==1) {  // the light sensor at A1 is maximum
+        rotateRight(150, 100);
+      }else if (maxA==2) {  // the light sensor at A2 is maximum
+        rotateLeft(150, 100);
+      }
+    }else if (maxV<maxLight){
+      if (maxA==0) {  // the light sensor at A0 is maximum
+        moveForward(250,100);
       }else if (maxA==1) {  // the light sensor at A1 is maximum
         rotateRight(150, 100);
       }else if (maxA==2) {  // the light sensor at A2 is maximum
@@ -758,8 +804,8 @@ void LightandCompassControl() {
 
     stopMove(50);
     blinkLED();
-    blinkLED();
-    blinkLED();
+    //blinkLED();
+    //blinkLED();
     sCompassLightSen = false;
       break;
   }
@@ -829,36 +875,46 @@ void rotateRight(int spd, int t) {
   M1.set(spd); M2.set(spd); M3.set(spd);
   M1.update(); M2.update(); M3.update();
   delay(t);
-  stopMove(50);
+  //stopMove(50);
 }
 void rotateLeft(int spd, int t) {
   M1.set(-1*spd); M2.set(-1*spd); M3.set(-1*spd);
   M1.update(); M2.update(); M3.update();
   delay(t);
-  stopMove(50);
+  //stopMove(50);
 }
 void moveForward(int spd, int t) {
   M1.set(-1*spd); M2.set(0); M3.set(spd);
   M1.update(); M2.update(); M3.update();
   delay(t);
-  stopMove(50);
+  //stopMove(50);
 }
+
+
+
 float delta = 10.0;
 void pointTo(float dir) {
   float heading = 0.0;
   float angle_diff = 0.0;
 
-  if (dir<0.0 || dir>360.0) return;
+  if (dir<0.0 ){
+    dir+=360.0;
+  } else if(dir>360.0) {
+    dir-=360.0;
+  }
 
   do {
     heading = getHeading();
     angle_diff = heading-dir;
     if (angle_diff<0.0) angle_diff+=360.0;
 
-    if (angle_diff>=delta && angle_diff<=180.0) {
+    /*if (angle_diff>=delta && angle_diff<=180.0) {
       rotateLeft(150, 50);
     }
     else if (angle_diff>180.0 && angle_diff<=(360.0-delta)) {
+      rotateRight(150, 50);
+    }*/
+    if (angle_diff>=delta && angle_diff<=(360.0-delta)) {
       rotateRight(150, 50);
     }
     else if (angle_diff<delta || angle_diff>(360.0-delta)) {
@@ -867,7 +923,37 @@ void pointTo(float dir) {
     }
   }while(1);
 }
-//
+
+void relativePointTo(float relative_dir){
+  float rHeading = 0.0;
+  float angle_diff = 0.0;
+
+  if (relative_dir<0.0 ){
+    relative_dir+=360.0;
+  } else if(relative_dir>360.0) {
+    relative_dir-=360.0;
+  }
+
+  do {
+    rHeading = getRelativeHeading();
+    angle_diff = rHeading-relative_dir;
+    if (angle_diff<0.0) angle_diff+=360.0;
+
+    if (angle_diff>=delta && angle_diff<=180.0) {
+      rotateLeft(150, 50);
+    }
+    else if (angle_diff>180.0 && angle_diff<=(360.0-delta)) {
+      rotateRight(150, 50);
+    }
+    /*if (angle_diff>=delta && angle_diff<=(360.0-delta)) {
+      rotateRight(150, 50);
+    }*/
+    else if (angle_diff<delta || angle_diff>(360.0-delta)) {
+      stopMove(50);
+      break;
+    }
+  }while(1);
+}
 
 // this function is to slowdown the main loop by delay.
 // Student should not modify this function
@@ -879,7 +965,7 @@ float getRelativeHeading(){
   float heading=getHeading();
   float relativeHeading=heading-initial_angle;
   if(relativeHeading<0){
-    relativeHeading+=360;
+    relativeHeading+=360.0;
   }
   return relativeHeading;
 }
